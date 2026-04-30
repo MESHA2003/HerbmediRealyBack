@@ -54,7 +54,7 @@ const Login = () => {
 
     return (
         <div
-            className="flex min-h-screen items-center justify-center p-4"
+            className="relative flex min-h-screen flex-col items-center justify-center p-4"
             style={{ backgroundImage: floralPattern, backgroundColor: '#e8f5e9' }}
         >
             {/* Main container - white, shadowed */}
@@ -163,12 +163,13 @@ const Login = () => {
                                 {isLoading ? 'Signing in...' : 'Sign In'}
                             </motion.button>
                         </form>
-
-                        <div className="mt-6 text-center text-xs text-medical-muted">
-                            <p>Demo: admin / admin123</p>
-                        </div>
                     </motion.div>
                 </div>
+            </div>
+
+            {/* Footer */}
+            <div className="absolute bottom-0 left-0 right-0 py-4 text-center text-sm text-medical-muted">
+                <p>&copy; {new Date().getFullYear()} Shekilindi Herbal Clinic & Research. All rights reserved.</p>
             </div>
         </div>
     );
