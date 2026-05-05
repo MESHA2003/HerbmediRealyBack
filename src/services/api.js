@@ -1,13 +1,14 @@
 import axios from 'axios';
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+// Use Vite proxy in dev (empty prefix = same origin), or env variable for production
+const BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 const API = axios.create({
     baseURL: BASE_URL,
     headers: { 'Content-Type': 'application/json' },
 });
 
-// Request interceptor to add token
+// Request interceptor: add JWT token to every request
 API.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('access_token');
@@ -19,7 +20,7 @@ API.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
-// Response interceptor to handle token refresh
+// Response interceptor: automatically refresh token on 401 (Unauthorized)
 API.interceptors.response.use(
     (response) => response,
     async (error) => {

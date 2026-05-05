@@ -29,10 +29,10 @@ const Inventory = () => {
         name: '',
         category: 'capsules',
         unit: 'pieces',
-        price_per_unit: 0,
+        price_per_unit: '',
         source: '',
-        stock_quantity: 0,
-        total_capacity: 0,
+        stock_quantity: '',
+        total_capacity: '',
         reorder_level: 10,
         critical_level: 5,
         expiry_date: '',
@@ -80,17 +80,23 @@ const Inventory = () => {
             toast.error('Medicine name required');
             return;
         }
-        if (newMedicine.total_capacity <= 0) {
+        if (!newMedicine.total_capacity || newMedicine.total_capacity <= 0) {
             toast.error('Total capacity must be greater than 0');
             return;
         }
         try {
-            await API.post('/clinic/medicines/', newMedicine);
+            const payload = {
+                ...newMedicine,
+                price_per_unit: parseFloat(newMedicine.price_per_unit) || 0,
+                stock_quantity: parseInt(newMedicine.stock_quantity) || 0,
+                total_capacity: parseInt(newMedicine.total_capacity) || 0,
+            };
+            await API.post('/clinic/medicines/', payload);
             toast.success('Medicine added successfully');
             setIsAddModalOpen(false);
             setNewMedicine({
-                name: '', category: 'capsules', unit: 'pieces', price_per_unit: 0, source: '', stock_quantity: 0,
-                total_capacity: 0, reorder_level: 10, critical_level: 5, expiry_date: '', description: ''
+                name: '', category: 'capsules', unit: 'pieces', price_per_unit: '', source: '', stock_quantity: '',
+                total_capacity: '', reorder_level: 10, critical_level: 5, expiry_date: '', description: ''
             });
             fetchMedicines();
         } catch (err) {
@@ -249,11 +255,11 @@ const Inventory = () => {
                             {unitMapping[newMedicine.category].map(unit => <option key={unit} value={unit}>{unit}</option>)}
                         </select>
                     </div>
-                    <FormInput label="Price per Unit (TZS)" type="number" step="1" value={newMedicine.price_per_unit} onChange={(e) => setNewMedicine({ ...newMedicine, price_per_unit: parseInt(e.target.value) || 0 })} />
-                    <FormInput label="Initial Stock Quantity" type="number" value={newMedicine.stock_quantity} onChange={(e) => setNewMedicine({ ...newMedicine, stock_quantity: parseInt(e.target.value) || 0 })} />
-                    <FormInput label="Total Capacity (100% Level) *" type="number" value={newMedicine.total_capacity} onChange={(e) => setNewMedicine({ ...newMedicine, total_capacity: parseInt(e.target.value) || 0 })} required />
-                    <FormInput label="Reorder Level (legacy)" type="number" value={newMedicine.reorder_level} onChange={(e) => setNewMedicine({ ...newMedicine, reorder_level: parseInt(e.target.value) || 10 })} />
-                    <FormInput label="Critical Level (legacy)" type="number" value={newMedicine.critical_level} onChange={(e) => setNewMedicine({ ...newMedicine, critical_level: parseInt(e.target.value) || 5 })} />
+                    <FormInput label="Price per Unit (TZS)" type="number" step="1" value={newMedicine.price_per_unit} onChange={(e) => setNewMedicine({ ...newMedicine, price_per_unit: e.target.value })} />
+                    <FormInput label="Initial Stock Quantity" type="number" value={newMedicine.stock_quantity} onChange={(e) => setNewMedicine({ ...newMedicine, stock_quantity: e.target.value })} />
+                    <FormInput label="Total Capacity (100% Level) *" type="number" value={newMedicine.total_capacity} onChange={(e) => setNewMedicine({ ...newMedicine, total_capacity: e.target.value })} required />
+                    <FormInput label="Reorder Level" type="number" value={newMedicine.reorder_level} onChange={(e) => setNewMedicine({ ...newMedicine, reorder_level: e.target.value })} />
+                    <FormInput label="Critical Level" type="number" value={newMedicine.critical_level} onChange={(e) => setNewMedicine({ ...newMedicine, critical_level: e.target.value })} />
                     <FormInput label="Source (Supplier/Farmer)" value={newMedicine.source} onChange={(e) => setNewMedicine({ ...newMedicine, source: e.target.value })} />
                     <FormInput label="Expiry Date (Optional)" type="date" value={newMedicine.expiry_date} onChange={(e) => setNewMedicine({ ...newMedicine, expiry_date: e.target.value })} />
                     <FormInput label="Description" textarea rows={2} value={newMedicine.description} onChange={(e) => setNewMedicine({ ...newMedicine, description: e.target.value })} />
@@ -265,7 +271,7 @@ const Inventory = () => {
             <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} title="Edit Medicine">
                 {editingItem && (
                     <div className="space-y-4 max-h-[70vh] overflow-y-auto">
-                        <FormInput label="Drug Name" value={editingItem.name} disabled />
+                        <FormInput label="Drug Name" value={editingItem.name} onChange={(e) => setEditingItem({ ...editingItem, name: e.target.value })} required />
                         <div>
                             <label className="block text-sm font-medium mb-1">Category</label>
                             <select value={editingItem.category} onChange={(e) => handleEditCategoryChange(e.target.value)} className="w-full rounded-lg border border-medical-border px-3 py-2">
@@ -281,11 +287,11 @@ const Inventory = () => {
                                 {unitMapping[editingItem.category]?.map(unit => <option key={unit} value={unit}>{unit}</option>) || <option>pieces</option>}
                             </select>
                         </div>
-                        <FormInput label="Price per Unit (TZS)" type="number" step="1" value={editingItem.price_per_unit} onChange={(e) => setEditingItem({ ...editingItem, price_per_unit: parseInt(e.target.value) || 0 })} />
-                        <FormInput label="Stock Quantity" type="number" value={editingItem.stock_quantity} onChange={(e) => setEditingItem({ ...editingItem, stock_quantity: parseInt(e.target.value) || 0 })} />
-                        <FormInput label="Total Capacity" type="number" value={editingItem.total_capacity} onChange={(e) => setEditingItem({ ...editingItem, total_capacity: parseInt(e.target.value) || 0 })} />
-                        <FormInput label="Reorder Level (legacy)" type="number" value={editingItem.reorder_level} onChange={(e) => setEditingItem({ ...editingItem, reorder_level: parseInt(e.target.value) || 10 })} />
-                        <FormInput label="Critical Level (legacy)" type="number" value={editingItem.critical_level} onChange={(e) => setEditingItem({ ...editingItem, critical_level: parseInt(e.target.value) || 5 })} />
+                        <FormInput label="Price per Unit (TZS)" type="number" step="1" value={editingItem.price_per_unit} onChange={(e) => setEditingItem({ ...editingItem, price_per_unit: e.target.value })} />
+                        <FormInput label="Stock Quantity" type="number" value={editingItem.stock_quantity} onChange={(e) => setEditingItem({ ...editingItem, stock_quantity: e.target.value })} />
+                        <FormInput label="Total Capacity" type="number" value={editingItem.total_capacity} onChange={(e) => setEditingItem({ ...editingItem, total_capacity: e.target.value })} />
+                        <FormInput label="Reorder Level" type="number" value={editingItem.reorder_level} onChange={(e) => setEditingItem({ ...editingItem, reorder_level: e.target.value })} />
+                        <FormInput label="Critical Level" type="number" value={editingItem.critical_level} onChange={(e) => setEditingItem({ ...editingItem, critical_level: e.target.value })} />
                         <FormInput label="Source" value={editingItem.source} onChange={(e) => setEditingItem({ ...editingItem, source: e.target.value })} />
                         <FormInput label="Expiry Date" type="date" value={editingItem.expiry_date} onChange={(e) => setEditingItem({ ...editingItem, expiry_date: e.target.value })} />
                         <FormInput label="Description" textarea rows={2} value={editingItem.description} onChange={(e) => setEditingItem({ ...editingItem, description: e.target.value })} />

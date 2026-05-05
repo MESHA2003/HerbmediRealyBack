@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, Eye, EyeOff, Leaf, Building2, MapPin, Phone } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Building2, MapPin, Phone } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
 import img1 from '../assets/img1.jpg';
 import img2 from '../assets/img2.jpg';
 import img3 from '../assets/img3.jpg';
+import logo from '../assets/Logo.jpg';   // transparent logo
 
 const images = [img1, img2, img3];
 
@@ -83,16 +84,16 @@ const Login = () => {
                     <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
                         <div className="flex items-center gap-2 mb-2">
                             <Building2 size={18} />
-                            <h3 className="text-lg font-bold">Shekilindi Herbal Clinic & Research</h3>
+                            <h3 className="text-lg font-bold">Shekilindi Herbal Clinic & Research Centre</h3>
                         </div>
-                        <p className="text-sm opacity-90 mb-1">Owner: Shaaban Shekilindi</p>
+                        <p className="text-sm opacity-90 mb-1">Owner: Shaban Shekilindi</p>
                         <div className="flex items-center gap-2 text-xs opacity-80">
                             <MapPin size={14} />
                             <span>P.O.Box 1249 Dodoma</span>
                         </div>
                         <div className="flex items-center gap-2 text-xs opacity-80">
                             <Phone size={14} />
-                            <span>0713184406</span>
+                            <span>+255 784324959</span>
                         </div>
                     </div>
                 </div>
@@ -105,14 +106,15 @@ const Login = () => {
                         transition={{ duration: 0.5 }}
                         className="mx-auto max-w-md"
                     >
-                        <div className="mb-6 text-center">
-                            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary-100">
-                                <Leaf className="h-6 w-6 text-primary-600" />
-                            </div>
-                            <h2 className="mt-3 text-xl font-bold text-medical-text">Welcome Back</h2>
-                            <p className="mt-1 text-sm text-medical-muted">
-                                Sign in to your account
-                            </p>
+                        {/* Logo – moderate size, transparent, centered */}
+                        <div className="mb-4 text-center">
+                            <img
+                                src={logo}
+                                alt="Clinic Logo"
+                                className="w-32 h-auto mx-auto object-contain"
+                            />
+                            <h2 className="text-2xl font-bold text-medical-text mt-3">Welcome Back</h2>
+                            <p className="mt-1 text-sm text-medical-muted">Sign in to your account</p>
                         </div>
 
                         <form onSubmit={handleSubmit} className="space-y-4">
@@ -167,9 +169,9 @@ const Login = () => {
                 </div>
             </div>
 
-            {/* Footer */}
+            {/* Footer with copyright */}
             <div className="absolute bottom-0 left-0 right-0 py-4 text-center text-sm text-medical-muted">
-                <p>&copy; {new Date().getFullYear()} Shekilindi Herbal Clinic & Research. All rights reserved.</p>
+                <p>&copy; {new Date().getFullYear()} Shekilindi Herbal Clinic & Research Centre. All rights reserved.</p>
             </div>
         </div>
     );

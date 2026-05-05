@@ -9,6 +9,12 @@ import { Users, Stethoscope, Clock, CheckCircle, ClipboardList, PlusCircle } fro
 import toast from 'react-hot-toast';
 import API from '../services/api';
 
+// Common symptoms list (can be extended)
+const commonSymptoms = [
+    'Fever', 'Cough', 'Headache', 'Fatigue', 'Nausea', 'Joint Pain',
+    'Dizziness', 'Rash', 'Sore Throat', 'Shortness of Breath', 'Chest Pain'
+];
+
 const DoctorDashboard = () => {
     const [visits, setVisits] = useState([]);
     const [medicines, setMedicines] = useState([]);
@@ -21,9 +27,12 @@ const DoctorDashboard = () => {
     const [submitting, setSubmitting] = useState(false);
     const [statsData, setStatsData] = useState({ waiting: 0, in_progress: 0, completed_today: 0, total_today: 0 });
 
+    // Symptom selection state
+    const [selectedSymptoms, setSelectedSymptoms] = useState([]);
+    const [otherSymptoms, setOtherSymptoms] = useState('');
+
     const fetchData = async () => {
         try {
-            // Use the new stats endpoint for doctor
             const statsRes = await API.get('/clinic/stats/doctor/');
             const data = statsRes.data;
             setVisits(data.queue || []);
@@ -33,7 +42,6 @@ const DoctorDashboard = () => {
                 completed_today: data.completed_today || 0,
                 total_today: data.total_today || 0,
             });
-            // Also fetch medicines separately
             const medsRes = await API.get('/clinic/medicines/');
             setMedicines(medsRes.data.results || medsRes.data);
         } catch (err) {
@@ -58,6 +66,14 @@ const DoctorDashboard = () => {
         setSelectedVisit(visit);
         setDiagnosis(visit.diagnosis || '');
         setNotes(visit.notes || '');
+        // Pre‑fill symptoms if they exist (as a comma‑separated string)
+        const existingSymptoms = visit.symptoms || '';
+        // Simple heuristic: split by commas, trim, and match against common list
+        const symptomsArray = existingSymptoms.split(',').map(s => s.trim()).filter(s => s);
+        const common = symptomsArray.filter(s => commonSymptoms.includes(s));
+        const other = symptomsArray.filter(s => !commonSymptoms.includes(s)).join(', ');
+        setSelectedSymptoms(common);
+        setOtherSymptoms(other);
         setPrescriptions([{ medicine_id: '', dosage: '', quantity: 1 }]);
         setModalOpen(true);
         if (visit.status === 'waiting') {
@@ -77,6 +93,7 @@ const DoctorDashboard = () => {
         }
         setSubmitting(true);
         try {
+            // Create prescriptions
             for (const p of prescriptions) {
                 if (!p.medicine_id || !p.dosage || p.quantity < 1) continue;
                 await API.post('/clinic/prescriptions/', {
@@ -86,8 +103,21 @@ const DoctorDashboard = () => {
                     quantity_prescribed: p.quantity,
                 });
             }
-            await API.post(`/clinic/visits/${selectedVisit.id}/complete_consultation/`);
-            await API.patch(`/clinic/visits/${selectedVisit.id}/`, { diagnosis, notes });
+
+            // Build symptoms string
+            let symptomsStr = selectedSymptoms.join(', ');
+            if (otherSymptoms.trim()) {
+                symptomsStr += symptomsStr ? `, ${otherSymptoms}` : otherSymptoms;
+            }
+
+            // Mark visit as completed and save diagnosis, notes, and symptoms
+            await API.post(`/clinic/visits/${selectedVisit.id}/complete/`);
+            await API.patch(`/clinic/visits/${selectedVisit.id}/`, {
+                diagnosis,
+                notes,
+                symptoms: symptomsStr,
+            });
+
             toast.success('Consultation completed. Sent to pharmacy.');
             setModalOpen(false);
             fetchData();
@@ -137,13 +167,43 @@ const DoctorDashboard = () => {
                     <Table columns={columns} data={visits} />
                 </div>
             </motion.div>
-            {/* Consultation Modal */}
+
+            {/* Consultation Modal with symptom checklist */}
             <Modal isOpen={modalOpen} onClose={() => !submitting && setModalOpen(false)} title={`Consultation for ${selectedVisit?.patient_name}`}>
-                <div className="space-y-4">
+                <div className="space-y-4 max-h-[80vh] overflow-y-auto">
                     {/* Patient Info */}
                     <div className="bg-gray-50 p-3 rounded text-sm">
                         <p><strong>Ticket:</strong> {selectedVisit?.ticket_number}</p>
-                        <p><strong>Symptoms:</strong> {selectedVisit?.symptoms}</p>
+                    </div>
+
+                    {/* Symptoms (Checkboxes + other) */}
+                    <div>
+                        <label className="block text-sm font-medium mb-2">Symptoms (select common)</label>
+                        <div className="grid grid-cols-2 gap-2 mb-2">
+                            {commonSymptoms.map(symptom => (
+                                <label key={symptom} className="inline-flex items-center gap-2 text-sm">
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedSymptoms.includes(symptom)}
+                                        onChange={(e) => {
+                                            if (e.target.checked) {
+                                                setSelectedSymptoms([...selectedSymptoms, symptom]);
+                                            } else {
+                                                setSelectedSymptoms(selectedSymptoms.filter(s => s !== symptom));
+                                            }
+                                        }}
+                                    />
+                                    {symptom}
+                                </label>
+                            ))}
+                        </div>
+                        <input
+                            type="text"
+                            placeholder="Other symptoms (type here)"
+                            value={otherSymptoms}
+                            onChange={(e) => setOtherSymptoms(e.target.value)}
+                            className="w-full border rounded px-3 py-2 text-sm"
+                        />
                     </div>
 
                     {/* Diagnosis */}
@@ -163,25 +223,47 @@ const DoctorDashboard = () => {
                         <label className="block text-sm font-medium mb-2">Prescriptions</label>
                         {prescriptions.map((p, idx) => (
                             <div key={idx} className="flex gap-2 mb-2">
-                                <select value={p.medicine_id} onChange={(e) => {
-                                    const newPres = [...prescriptions];
-                                    newPres[idx].medicine_id = e.target.value;
-                                    setPrescriptions(newPres);
-                                }} className="flex-1 border rounded p-2 text-sm">
+                                <select
+                                    value={p.medicine_id}
+                                    onChange={(e) => {
+                                        const newPres = [...prescriptions];
+                                        newPres[idx].medicine_id = e.target.value;
+                                        setPrescriptions(newPres);
+                                    }}
+                                    className="flex-1 border rounded p-2 text-sm"
+                                >
                                     <option value="">Select medicine</option>
-                                    {medicines.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                                    {medicines.map(m => <option key={m.id} value={m.id}>{m.name} (Stock: {m.stock_quantity})</option>)}
                                 </select>
-                                <input type="text" placeholder="Dosage" value={p.dosage} onChange={(e) => {
-                                    const newPres = [...prescriptions];
-                                    newPres[idx].dosage = e.target.value;
-                                    setPrescriptions(newPres);
-                                }} className="w-24 border rounded p-2 text-sm" />
-                                <input type="number" placeholder="Qty" min="1" value={p.quantity} onChange={(e) => {
-                                    const newPres = [...prescriptions];
-                                    newPres[idx].quantity = parseInt(e.target.value) || 1;
-                                    setPrescriptions(newPres);
-                                }} className="w-16 border rounded p-2 text-sm" />
-                                <button onClick={() => setPrescriptions(prescriptions.filter((_, i) => i !== idx))} className="bg-red-100 text-red-700 px-2 rounded text-xs hover:bg-red-200">Remove</button>
+                                <input
+                                    type="text"
+                                    placeholder="Dosage"
+                                    value={p.dosage}
+                                    onChange={(e) => {
+                                        const newPres = [...prescriptions];
+                                        newPres[idx].dosage = e.target.value;
+                                        setPrescriptions(newPres);
+                                    }}
+                                    className="w-24 border rounded p-2 text-sm"
+                                />
+                                <input
+                                    type="number"
+                                    placeholder="Qty"
+                                    min="1"
+                                    value={p.quantity}
+                                    onChange={(e) => {
+                                        const newPres = [...prescriptions];
+                                        newPres[idx].quantity = parseInt(e.target.value) || 1;
+                                        setPrescriptions(newPres);
+                                    }}
+                                    className="w-16 border rounded p-2 text-sm"
+                                />
+                                <button
+                                    onClick={() => setPrescriptions(prescriptions.filter((_, i) => i !== idx))}
+                                    className="bg-red-100 text-red-700 px-2 rounded text-xs hover:bg-red-200"
+                                >
+                                    Remove
+                                </button>
                             </div>
                         ))}
                         <button onClick={() => setPrescriptions([...prescriptions, { medicine_id: '', dosage: '', quantity: 1 }])} className="text-primary-600 text-sm hover:underline">+ Add prescription</button>

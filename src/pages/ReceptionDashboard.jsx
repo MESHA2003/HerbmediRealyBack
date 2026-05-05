@@ -20,6 +20,18 @@ const ReceptionDashboard = () => {
         name: '', phone: '', age: '', date_of_birth: '', gender: 'M',
         address: '', emergency_contact_name: '', emergency_contact_phone: ''
     });
+
+    const calculateAge = (dob) => {
+        if (!dob) return '';
+        const birthDate = new Date(dob);
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        return age >= 0 ? age.toString() : '';
+    };
     const [visitType, setVisitType] = useState('new');
     const [symptoms, setSymptoms] = useState('');
 
@@ -181,7 +193,14 @@ const ReceptionDashboard = () => {
                     </div>
                     <div>
                         <label className="block text-sm font-medium mb-1">Date of Birth</label>
-                        <input type="date" value={newPatient.date_of_birth} onChange={(e) => setNewPatient({ ...newPatient, date_of_birth: e.target.value })} className="w-full border rounded px-3 py-2" />
+                        <input type="date" value={newPatient.date_of_birth} onChange={(e) => {
+                            const dob = e.target.value;
+                            const calculatedAge = calculateAge(dob);
+                            setNewPatient({ ...newPatient, date_of_birth: dob, age: calculatedAge });
+                        }} className="w-full border rounded px-3 py-2" />
+                        {newPatient.date_of_birth && newPatient.age && (
+                            <p className="text-xs text-green-600 mt-1">Auto-calculated age: {newPatient.age} years</p>
+                        )}
                     </div>
                     <div>
                         <label className="block text-sm font-medium mb-1">Gender</label>
