@@ -11,6 +11,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import Reports from './pages/Reports';
 import UsersManagement from './pages/UsersManagement';
 import ReceptionReport from './pages/ReceptionReport';
+import ChangePassword from './pages/ChangePassword';
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
         <Route path="/admin/users" element={<ProtectedRoute><UsersManagement /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
         <Route path="/reception/reports" element={<ProtectedRoute><ReceptionReport /></ProtectedRoute>} />
+        <Route path="/change-password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />
       </Routes>
     </AuthProvider>
   );

@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Bell, User, Menu, LogOut, ChevronDown, Mail, Phone } from 'lucide-react';
+import { Search, Bell, User, Menu, LogOut, ChevronDown, Mail, Phone, Lock } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
 const Navbar = ({ toggleSidebar }) => {
     const { user, logout } = useAuth();
+    const navigate = useNavigate();
     const [showNotifications, setShowNotifications] = useState(false);
     const [showUserMenu, setShowUserMenu] = useState(false);
 
@@ -142,13 +144,20 @@ const Navbar = ({ toggleSidebar }) => {
                                         )}
                                     </div>
                                     <div className="p-2">
-                                        <button
-                                            onClick={handleLogout}
-                                            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition"
-                                        >
-                                            <LogOut size={16} />
-                                            <span>Logout</span>
-                                        </button>
+                                    <button
+                                        onClick={() => { setShowUserMenu(false); navigate('/change-password'); }}
+                                        className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition"
+                                    >
+                                        <Lock size={16} />
+                                        <span>Change Password</span>
+                                    </button>
+                                    <button
+                                        onClick={handleLogout}
+                                        className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition"
+                                    >
+                                        <LogOut size={16} />
+                                        <span>Logout</span>
+                                    </button>
                                     </div>
                                 </motion.div>
                             )}
