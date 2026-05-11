@@ -86,14 +86,14 @@ const Login = () => {
                             <Building2 size={18} />
                             <h3 className="text-lg font-bold">Shekilindi Herbal Clinic & Research Centre</h3>
                         </div>
-                        <p className="text-sm opacity-90 mb-1">Owner: Shaban Shekilindi</p>
+                        <p className="text-sm opacity-90 mb-1">Owner: Shabani Shekilindi</p>
                         <div className="flex items-center gap-2 text-xs opacity-80">
                             <MapPin size={14} />
                             <span>P.O.Box 1249 Dodoma</span>
                         </div>
                         <div className="flex items-center gap-2 text-xs opacity-80">
                             <Phone size={14} />
-                            <span>+255 784324959</span>
+                            <span>0713184406</span>
                         </div>
                     </div>
                 </div>

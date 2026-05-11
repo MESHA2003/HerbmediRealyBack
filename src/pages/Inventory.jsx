@@ -70,8 +70,8 @@ const Inventory = () => {
 
     const stats = [
         { title: 'Total Items', value: medicines.length, icon: Package, color: 'primary' },
-        { title: 'Low Stock (≤40%)', value: lowStockCount, icon: AlertTriangle, color: 'orange' },
-        { title: 'Critical (≤20%)', value: criticalStockCount, icon: AlertTriangle, color: 'red' },
+        { title: 'Low Stock (<=40%)', value: lowStockCount, icon: AlertTriangle, color: 'orange' },
+        { title: 'Critical (<=20%)', value: criticalStockCount, icon: AlertTriangle, color: 'red' },
         { title: 'Total Stock Value', value: `TZS ${Math.round(totalStockValue).toLocaleString()}`, icon: DollarSign, color: 'green' },
     ];
 
@@ -80,16 +80,22 @@ const Inventory = () => {
             toast.error('Medicine name required');
             return;
         }
-        if (!newMedicine.total_capacity || newMedicine.total_capacity <= 0) {
+        const totalCap = parseInt(newMedicine.total_capacity) || 0;
+        const stockQty = parseInt(newMedicine.stock_quantity) || 0;
+        if (totalCap <= 0) {
             toast.error('Total capacity must be greater than 0');
+            return;
+        }
+        if (stockQty > totalCap) {
+            toast.error(`Stock quantity (${stockQty}) cannot exceed total capacity (${totalCap})`);
             return;
         }
         try {
             const payload = {
                 ...newMedicine,
                 price_per_unit: parseFloat(newMedicine.price_per_unit) || 0,
-                stock_quantity: parseInt(newMedicine.stock_quantity) || 0,
-                total_capacity: parseInt(newMedicine.total_capacity) || 0,
+                stock_quantity: stockQty,
+                total_capacity: totalCap,
             };
             await API.post('/clinic/medicines/', payload);
             toast.success('Medicine added successfully');
@@ -100,7 +106,8 @@ const Inventory = () => {
             });
             fetchMedicines();
         } catch (err) {
-            toast.error(err.response?.data?.detail || 'Failed to add medicine');
+            const msg = err.response?.data?.stock_quantity?.[0] || err.response?.data?.detail || 'Failed to add medicine';
+            toast.error(msg);
         }
     };
 
@@ -110,13 +117,20 @@ const Inventory = () => {
     };
 
     const handleUpdate = async () => {
+        const totalCap = parseInt(editingItem.total_capacity) || 0;
+        const stockQty = parseInt(editingItem.stock_quantity) || 0;
+        if (totalCap > 0 && stockQty > totalCap) {
+            toast.error(`Stock quantity (${stockQty}) cannot exceed total capacity (${totalCap})`);
+            return;
+        }
         try {
             await API.put(`/clinic/medicines/${editingItem.id}/`, editingItem);
             toast.success('Medicine updated');
             setIsEditModalOpen(false);
             fetchMedicines();
         } catch (err) {
-            toast.error('Update failed');
+            const msg = err.response?.data?.stock_quantity?.[0] || err.response?.data?.detail || 'Update failed';
+            toast.error(msg);
         }
     };
 
@@ -147,6 +161,10 @@ const Inventory = () => {
         let newQty = stockAdjustItem.stock_quantity;
         if (stockAdjustType === 'add') {
             newQty += stockAdjustQty;
+            if (stockAdjustItem.total_capacity > 0 && newQty > stockAdjustItem.total_capacity) {
+                toast.error(`Cannot exceed total capacity (${stockAdjustItem.total_capacity} ${stockAdjustItem.unit}). Current: ${stockAdjustItem.stock_quantity}`);
+                return;
+            }
         } else {
             if (stockAdjustQty > stockAdjustItem.stock_quantity) {
                 toast.error('Cannot reduce more than current stock');
@@ -160,7 +178,8 @@ const Inventory = () => {
             setIsStockModalOpen(false);
             fetchMedicines();
         } catch (err) {
-            toast.error('Stock adjustment failed');
+            const msg = err.response?.data?.stock_quantity?.[0] || err.response?.data?.detail || 'Stock adjustment failed';
+            toast.error(msg);
         }
     };
 
@@ -258,6 +277,7 @@ const Inventory = () => {
                     <FormInput label="Price per Unit (TZS)" type="number" step="1" value={newMedicine.price_per_unit} onChange={(e) => setNewMedicine({ ...newMedicine, price_per_unit: e.target.value })} />
                     <FormInput label="Initial Stock Quantity" type="number" value={newMedicine.stock_quantity} onChange={(e) => setNewMedicine({ ...newMedicine, stock_quantity: e.target.value })} />
                     <FormInput label="Total Capacity (100% Level) *" type="number" value={newMedicine.total_capacity} onChange={(e) => setNewMedicine({ ...newMedicine, total_capacity: e.target.value })} required />
+                    <p className="text-xs text-gray-500">Total capacity must be greater than or equal to stock quantity.</p>
                     <FormInput label="Reorder Level" type="number" value={newMedicine.reorder_level} onChange={(e) => setNewMedicine({ ...newMedicine, reorder_level: e.target.value })} />
                     <FormInput label="Critical Level" type="number" value={newMedicine.critical_level} onChange={(e) => setNewMedicine({ ...newMedicine, critical_level: e.target.value })} />
                     <FormInput label="Source (Supplier/Farmer)" value={newMedicine.source} onChange={(e) => setNewMedicine({ ...newMedicine, source: e.target.value })} />
@@ -290,6 +310,7 @@ const Inventory = () => {
                         <FormInput label="Price per Unit (TZS)" type="number" step="1" value={editingItem.price_per_unit} onChange={(e) => setEditingItem({ ...editingItem, price_per_unit: e.target.value })} />
                         <FormInput label="Stock Quantity" type="number" value={editingItem.stock_quantity} onChange={(e) => setEditingItem({ ...editingItem, stock_quantity: e.target.value })} />
                         <FormInput label="Total Capacity" type="number" value={editingItem.total_capacity} onChange={(e) => setEditingItem({ ...editingItem, total_capacity: e.target.value })} />
+                        <p className="text-xs text-gray-500">Total capacity must be greater than or equal to stock quantity.</p>
                         <FormInput label="Reorder Level" type="number" value={editingItem.reorder_level} onChange={(e) => setEditingItem({ ...editingItem, reorder_level: e.target.value })} />
                         <FormInput label="Critical Level" type="number" value={editingItem.critical_level} onChange={(e) => setEditingItem({ ...editingItem, critical_level: e.target.value })} />
                         <FormInput label="Source" value={editingItem.source} onChange={(e) => setEditingItem({ ...editingItem, source: e.target.value })} />

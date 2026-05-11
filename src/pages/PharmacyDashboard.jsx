@@ -121,6 +121,7 @@ const PharmacyDashboard = () => {
             <tr>
                 <td>${item.medicine_name}</td>
                 <td class="center">${item.quantity}</td>
+                <td class="right">${Number(item.unit_price).toLocaleString()}</td>
                 <td class="right">${Number(item.total).toLocaleString()}</td>
             </tr>
         `).join('');
@@ -150,8 +151,8 @@ const PharmacyDashboard = () => {
         <body>
           <div class="receipt">
             <div class="logo"><img src="${LOGO_BASE64}" alt="Clinic Logo"/></div>
-            <h2>Shekilindi Herbal Clinic</h2>
-            <div class="clinic">P.O.Box 1249 Dodoma | Tel: +255 784324959</div>
+            <h2>Shekilindi Herbal Clinic & Research Centre</h2>
+            <div class="clinic">Owner: Shabani Shekilindi | P.O.Box 1249 Dodoma | Tel: 0713184406</div>
             <hr/>
             <p><strong>Receipt No:</strong> ${receipt.receipt_number}</p>
             <p><strong>Date:</strong> ${new Date(receipt.created_at).toLocaleString()}</p>
@@ -160,7 +161,7 @@ const PharmacyDashboard = () => {
             <hr/>
             <table>
                 <thead>
-                    <tr><th>Medicine</th><th class="center">Qty</th><th class="right">Price</th><th class="right">Total</th></tr>
+                    <tr><th>Medicine</th><th class="center">Qty</th><th class="right">Unit Price</th><th class="right">Total (TZS)</th></tr>
                 </thead>
                 <tbody>
                     ${itemsHtml}

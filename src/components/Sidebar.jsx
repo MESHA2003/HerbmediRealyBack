@@ -2,9 +2,10 @@ import { NavLink } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
     LayoutDashboard, Users, Stethoscope, Pill, Package, Shield,
-    LogOut, ClipboardList, Box, User, ChevronRight, Circle
+    LogOut, ClipboardList, Box, User, ChevronRight
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import logo from '../assets/Logo.jpg';
 
 const roleNavMap = {
     reception: [
@@ -49,11 +50,19 @@ const Sidebar = ({ sidebarOpen }) => {
             className="fixed left-0 top-0 z-40 h-screen w-64 bg-gradient-to-b from-white to-gray-50 shadow-xl border-r border-medical-border custom-scrollbar"
         >
             <div className="flex h-full flex-col">
-                {/* Logo */}
-                <div className="flex h-16 items-center justify-center border-b border-medical-border bg-white">
-                    <h1 className="text-xl font-bold bg-gradient-to-r from-primary-600 to-primary-800 bg-clip-text text-transparent">
-                        🌿 HerbalClinic
-                    </h1>
+                {/* Logo - using the same Logo.jpg from Login page */}
+                <div className="flex h-20 items-center justify-center border-b border-medical-border bg-white px-4">
+                    <img
+                        src={logo}
+                        alt="Shekilindi Herbal Clinic Logo"
+                        className="h-16 w-auto object-contain"
+                    />
+                </div>
+
+                {/* Clinic Name below logo */}
+                <div className="text-center py-2 bg-primary-50 border-b border-medical-border">
+                    <p className="text-xs font-bold text-primary-800 leading-tight">Shekilindi Herbal</p>
+                    <p className="text-xs text-primary-600">Clinic & Research Centre</p>
                 </div>
 
                 {/* User Profile Section */}
@@ -76,7 +85,7 @@ const Sidebar = ({ sidebarOpen }) => {
                     </div>
                 </div>
 
-                {/* Navigation */}
+                {/* Navigation with Emojis */}
                 <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
                     {navItems.map((item) => (
                         <NavLink
@@ -122,6 +131,12 @@ const Sidebar = ({ sidebarOpen }) => {
                         <LogOut size={20} />
                         <span>Logout</span>
                     </motion.button>
+                </div>
+
+                {/* Footer in sidebar */}
+                <div className="border-t border-medical-border p-3 bg-white/50 text-center">
+                    <p className="text-[10px] text-medical-muted leading-tight">P.O.Box 1249 Dodoma</p>
+                    <p className="text-[10px] text-medical-muted">0713184406</p>
                 </div>
             </div>
         </motion.aside>

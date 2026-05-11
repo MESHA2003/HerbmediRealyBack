@@ -1,17 +1,22 @@
 import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import Table from '../components/Table';
-import { Users, Edit, Trash2, Plus, X } from 'lucide-react';
+import { Users, Edit, Trash2, Plus, X, Lock, Unlock, Key } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import API from '../services/api';
 import FormInput from '../components/FormInput';
+import { useAuth } from '../contexts/AuthContext';
 
 const UsersManagement = () => {
+    const { user: currentUser } = useAuth();
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] = useState(false);
+    const [resetPasswordTarget, setResetPasswordTarget] = useState(null);
+    const [resetPasswordValue, setResetPasswordValue] = useState('');
     const [editingUser, setEditingUser] = useState(null);
     const [newUser, setNewUser] = useState({
         username: '', email: '', password: '', role: 'reception', phone: '', first_name: '', last_name: ''
@@ -76,6 +81,60 @@ const UsersManagement = () => {
         }
     };
 
+    const handleOpenResetPassword = (user) => {
+        setResetPasswordTarget(user);
+        setResetPasswordValue('');
+        setIsResetPasswordModalOpen(true);
+    };
+
+    const handleResetPassword = async () => {
+        if (!resetPasswordValue || resetPasswordValue.length < 6) {
+            toast.error('Password must be at least 6 characters');
+            return;
+        }
+        try {
+            await API.post(`/auth/users/${resetPasswordTarget.id}/reset-password/`, { password: resetPasswordValue });
+            toast.success(`Password reset for ${resetPasswordTarget.username}`);
+            setIsResetPasswordModalOpen(false);
+            setResetPasswordTarget(null);
+            setResetPasswordValue('');
+            fetchUsers();
+        } catch (err) {
+            toast.error(err.response?.data?.error || 'Password reset failed');
+        }
+    };
+
+    const handleToggleBlock = async (user) => {
+        // Prevent admin from blocking themselves
+        if (currentUser && currentUser.id === user.id) {
+            toast.error('You cannot block/unblock yourself');
+            return;
+        }
+        const action = user.is_blocked ? 'unblock' : 'block';
+        const confirmMsg = user.is_blocked
+            ? `Unblock user "${user.username}"? They will be able to log in again.`
+            : `⚠️ Block user "${user.username}"?\n\nThis will prevent them from logging in until an admin unblocks them.\n\nAre you sure?`;
+        if (window.confirm(confirmMsg)) {
+            try {
+                await API.post(`/auth/users/${user.id}/${action}/`);
+                toast.success(`User ${action}ed successfully`);
+                fetchUsers();
+            } catch (err) {
+                const errMsg = err.response?.data?.error || `${action} failed`;
+                toast.error(errMsg);
+            }
+        }
+    };
+
+    const formatDateTime = (datetime) => {
+        if (!datetime) return 'Never';
+        const date = new Date(datetime);
+        return date.toLocaleString('en-US', {
+            year: 'numeric', month: 'short', day: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+        });
+    };
+
     const columns = [
         { header: 'Username', accessor: 'username' },
         { header: 'Full Name', accessor: (row) => `${row.first_name || ''} ${row.last_name || ''}`.trim() || '-' },
@@ -83,13 +142,39 @@ const UsersManagement = () => {
         { header: 'Role', accessor: 'role' },
         { header: 'Phone', accessor: 'phone' },
         {
+            header: 'Status',
+            accessor: (row) => (
+                <span className={`rounded-full px-2 py-1 text-xs font-medium ${
+                    row.is_blocked ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
+                }`}>
+                    {row.is_blocked ? 'BLOCKED' : 'ACTIVE'}
+                </span>
+            ),
+        },
+        {
+            header: 'Last Password Change',
+            accessor: (row) => (
+                <span className="text-sm text-medical-text">{formatDateTime(row.last_password_change)}</span>
+            ),
+        },
+        {
             header: 'Actions',
             accessor: (row) => (
                 <div className="flex gap-2">
-                    <button onClick={() => handleEditUser(row)} className="text-blue-600 hover:text-blue-800 transition">
+                    <button onClick={() => handleEditUser(row)} className="text-blue-600 hover:text-blue-800 transition" title="Edit user">
                         <Edit size={16} />
                     </button>
-                    <button onClick={() => handleDeleteUser(row.id, row.username)} className="text-red-600 hover:text-red-800 transition">
+                    <button onClick={() => handleOpenResetPassword(row)} className="text-purple-600 hover:text-purple-800 transition" title="Reset password">
+                        <Key size={16} />
+                    </button>
+                    <button
+                        onClick={() => handleToggleBlock(row)}
+                        className={`transition ${row.is_blocked ? 'text-green-600 hover:text-green-800' : 'text-orange-600 hover:text-orange-800'}`}
+                        title={row.is_blocked ? 'Unblock user' : 'Block user'}
+                    >
+                        {row.is_blocked ? <Unlock size={16} /> : <Lock size={16} />}
+                    </button>
+                    <button onClick={() => handleDeleteUser(row.id, row.username)} className="text-red-600 hover:text-red-800 transition" title="Delete user">
                         <Trash2 size={16} />
                     </button>
                 </div>
@@ -218,6 +303,52 @@ const UsersManagement = () => {
                                     </button>
                                     <button onClick={handleUpdateUser} className="px-4 py-2 rounded-lg bg-primary-600 text-white hover:bg-primary-700 transition">
                                         Update User
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* ================= RESET PASSWORD MODAL (Centered) ================= */}
+            <AnimatePresence>
+                {isResetPasswordModalOpen && resetPasswordTarget && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            transition={{ duration: 0.2 }}
+                            className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto"
+                        >
+                            <div className="sticky top-0 bg-white border-b border-medical-border px-6 py-4 flex justify-between items-center">
+                                <h2 className="text-xl font-semibold flex items-center gap-2">
+                                    <Key size={20} className="text-purple-600" />
+                                    Reset Password
+                                </h2>
+                                <button onClick={() => setIsResetPasswordModalOpen(false)} className="p-1 rounded-full hover:bg-gray-100 transition">
+                                    <X size={20} />
+                                </button>
+                            </div>
+                            <div className="p-6 space-y-4">
+                                <p className="text-sm text-medical-text">
+                                    Set a new password for <strong>{resetPasswordTarget.username}</strong>
+                                </p>
+                                <FormInput
+                                    label="New Password *"
+                                    type="password"
+                                    value={resetPasswordValue}
+                                    onChange={(e) => setResetPasswordValue(e.target.value)}
+                                    placeholder="At least 6 characters"
+                                    required
+                                />
+                                <div className="flex justify-end gap-3 pt-4 border-t border-medical-border">
+                                    <button onClick={() => setIsResetPasswordModalOpen(false)} className="px-4 py-2 rounded-lg border border-medical-border hover:bg-gray-50 transition">
+                                        Cancel
+                                    </button>
+                                    <button onClick={handleResetPassword} className="px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition">
+                                        Reset Password
                                     </button>
                                 </div>
                             </div>

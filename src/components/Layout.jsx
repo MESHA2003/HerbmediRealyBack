@@ -25,7 +25,7 @@ const Layout = ({ children }) => {
 
             {/* Footer with clinic information */}
             <footer className={`transition-all duration-300 ${sidebarOpen ? 'md:pl-64' : 'md:pl-20'} bg-white border-t border-medical-border py-3 px-6 text-center text-sm text-medical-muted`}>
-                <p>🌿 <strong>Shekilindi Herbal Clinic & Research</strong> – Owner: Shaaban Shekilindi</p>
+                <p><strong>Shekilindi Herbal Clinic & Research</strong> – Owner: Shabani Shekilindi</p>
                 <p>P.O.Box 1249 Dodoma | Phone: 0713184406</p>
             </footer>
         </div>

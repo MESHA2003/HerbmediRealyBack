@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 
-const Modal = ({ isOpen, onClose, title, children }) => {
+const Modal = ({ isOpen, onClose, title, children, size }) => {
     return (
         <AnimatePresence>
             {isOpen && (
@@ -21,7 +21,9 @@ const Modal = ({ isOpen, onClose, title, children }) => {
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9, y: 20 }}
                             transition={{ type: 'spring', damping: 25 }}
-                            className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[85vh] flex flex-col"
+                            className={`bg-white rounded-2xl shadow-xl w-full flex flex-col ${
+                                size === 'lg' ? 'max-w-4xl' : 'max-w-2xl'
+                            } max-h-[85vh]`}
                         >
                             {/* Sticky header */}
                             <div className="flex items-center justify-between border-b border-medical-border px-6 py-4 sticky top-0 bg-white rounded-t-2xl z-10">
