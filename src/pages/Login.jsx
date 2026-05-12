@@ -93,7 +93,7 @@ const Login = () => {
                         </div>
                         <div className="flex items-center gap-2 text-xs opacity-80">
                             <Phone size={14} />
-                            <span>0713184406</span>
+                            <span>0665564959</span>
                         </div>
                     </div>
                 </div>

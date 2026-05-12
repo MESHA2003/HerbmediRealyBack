@@ -136,7 +136,7 @@ const Sidebar = ({ sidebarOpen }) => {
                 {/* Footer in sidebar */}
                 <div className="border-t border-medical-border p-3 bg-white/50 text-center">
                     <p className="text-[10px] text-medical-muted leading-tight">P.O.Box 1249 Dodoma</p>
-                    <p className="text-[10px] text-medical-muted">0713184406</p>
+                    <p className="text-[10px] text-medical-muted">0665564959</p>
                 </div>
             </div>
         </motion.aside>

@@ -152,7 +152,7 @@ const PharmacyDashboard = () => {
           <div class="receipt">
             <div class="logo"><img src="${LOGO_BASE64}" alt="Clinic Logo"/></div>
             <h2>Shekilindi Herbal Clinic & Research Centre</h2>
-            <div class="clinic">Owner: Shabani Shekilindi | P.O.Box 1249 Dodoma | Tel: 0713184406</div>
+            <div class="clinic">Owner: Shabani Shekilindi | P.O.Box 1249 Dodoma | Tel: 0665564959</div>
             <hr/>
             <p><strong>Receipt No:</strong> ${receipt.receipt_number}</p>
             <p><strong>Date:</strong> ${new Date(receipt.created_at).toLocaleString()}</p>
